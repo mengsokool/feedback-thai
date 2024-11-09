@@ -48,7 +48,7 @@ export default function ResultSection({
 
   return (
     <div className="container mx-auto p-4 space-y-8">
-      <h1 className="text-3xl font-bold text-center mb-8">
+      <h1 className="text-3xl font-bold my-8">
         ผลการวิเคราะห์รีวิว
       </h1>
 

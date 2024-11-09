@@ -1,16 +1,15 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { ArrowRight, Info, MessageSquare, Sparkles } from "lucide-react";
-import Textarea from "react-textarea-autosize";
-import { motion } from "framer-motion";
-import ResultSection from "./components/result-section";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z, ZodError } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+import Textarea from "react-textarea-autosize";
+import { Button } from "@/components/ui/button";
+import { ArrowRight, Info, Loader } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import ResultSection from "./components/result-section";
+import { cn } from "@/lib/utils";
 
 // Define Zod schemas for input and output
 const analysisInputSchema = z.object({
@@ -22,6 +21,8 @@ export default function Home() {
   const [result, setResult] = useState<any | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
+
+  const resultSectionRef = useRef(null);
 
   const methods = useForm<z.infer<typeof analysisInputSchema>>({
     resolver: zodResolver(analysisInputSchema),
@@ -57,6 +58,12 @@ export default function Home() {
 
       const responseData = await response.json();
       setResult(responseData);
+      if (resultSectionRef.current) {
+        (resultSectionRef.current as HTMLElement).scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
+      }
     } catch (error) {
       console.error("Error during analysis:", error);
       if (error instanceof ZodError) {
@@ -69,105 +76,80 @@ export default function Home() {
       setIsLoading(false);
     }
   };
-
   return (
-    <main className="grid lg:grid-cols-2 min-h-dvh bg-gradient-to-br from-purple-600 to-blue-500 text-white">
-      <motion.div
-        className="flex flex-col justify-center px-8 lg:px-16 py-12 lg:py-0"
-        initial={{ opacity: 0, x: -50 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ duration: 0.5 }}
-      >
-        <h1 className="text-5xl font-bold mb-4">FeedbackThai</h1>
-        <p className="text-xl mb-8">บริการวิเคราะห์ความคิดเห็นอัจฉริยะ</p>
-        <div className="flex items-center space-x-4 text-lg">
-          <Sparkles className="w-6 h-6" />
-          <span>เทคโนโลยี AI ล้ำสมัย</span>
+    <main
+      className={cn(
+        "h-dvh realtive overflow-auto grid grid-cols-1 gap-4 divide-x",
+        result && "md:grid-cols-2"
+      )}
+    >
+      <div className="md:sticky bg-background md:top-0 md:h-dvh px-4">
+        <div className="container mx-auto max-w-3xl py-16">
+          <span className="text-4xl font-semibold">
+            <p className="bg-gradient-to-br from-violet-500 to-blue-600 bg-clip-text py-2 leading-tight text-transparent">
+              FeedbackThai
+            </p>
+          </span>
         </div>
-        <div className="flex items-center space-x-4 text-lg mt-4">
-          <MessageSquare className="w-6 h-6" />
-          <span>วิเคราะห์ความคิดเห็นแม่นยำ</span>
-        </div>
-      </motion.div>
-      <motion.div
-        className="flex flex-col justify-center px-8 lg:px-16 py-12 rounded-bl-3xl bg-white/10 backdrop-blur-lg"
-        initial={{ opacity: 0, x: 50 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ duration: 0.5, delay: 0.2 }}
-      >
-        <div className="bg-white/20 p-8 rounded-3xl shadow-2xl space-y-6">
-          <form onSubmit={methods.handleSubmit(onSubmit)} className="space-y-8">
-            <div>
-              <Label
-                htmlFor="productName"
-                className="text-lg font-semibold mb-2 block"
-              >
-                ชื่อสินค้า
-              </Label>
-              <Input
-                id="productName"
-                {...methods.register("productName")}
-                className="bg-white/10 h-11 text-xl border-none text-white"
-                placeholder="กรอกชื่อสินค้าของคุณ"
-              />
-              {methods.formState.errors.productName && (
-                <p className="text-red-500 text-sm">
-                  {methods.formState.errors.productName.message}
-                </p>
+        <form
+          onSubmit={methods.handleSubmit(onSubmit)}
+          className="relative items-center w-full container mx-auto max-w-3xl flex flex-col gap-4"
+        >
+          <Input
+            placeholder="ชื่อสินค้า"
+            disabled={isLoading}
+            className="w-full bg-muted border rounded-lg border-input h-12"
+            {...methods.register("productName")}
+          />
+          <Textarea
+            {...methods.register("messages")}
+            autoFocus
+            disabled={isLoading}
+            rows={3}
+            maxRows={12}
+            placeholder="ความคิดเห็นของลูกค้า"
+            className="flex min-h-24 transition-all w-full rounded-lg border border-input bg-muted px-3 py-3 text-base shadow-sm file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
+          />
+          <div className="flex w-full items-start mt-2 text-sm text-muted-foreground">
+            <Info className="w-4 h-4 mr-2 flex-shrink-0 mt-0.5" />
+            <p>
+              หากต้องการใส่หลายความคิดเห็น ให้กด Enter
+              เพื่อขึ้นบรรทัดใหม่สำหรับแต่ละความคิดเห็น
+            </p>
+          </div>
+          <div className="flex justify-end w-full">
+            <Button size={"lg"} disabled={isLoading}>
+              {isLoading ? (
+                <Loader className="size-4 animate-spin" />
+              ) : (
+                <>
+                  เริ่มต้นวิเคราะห์ <ArrowRight className="size-4 ms-2" />
+                </>
               )}
+            </Button>
+          </div>
+        </form>
+      </div>
+      <div className="flex flex-col gap-4 pl-4">
+        {result && (
+          <>
+            <ResultSection analysisData={result} />
+          </>
+        )}
+        <div ref={resultSectionRef} />
+        {apiError && (
+          <div className="flex flex-col gap-2">
+            <span className="text-2xl font-semibold">ผลลัพธ์</span>
+            <div className="flex flex-col gap-2">
+              <div className="flex flex-col gap-1">
+                <span className="text-lg font-semibold text-red-500">
+                  {apiError}
+                </span>
+              </div>
             </div>
-            <div>
-              <Label
-                htmlFor="messages"
-                className="text-lg font-semibold mb-2 block"
-              >
-                ข้อความรีวิว
-              </Label>
-              <Textarea
-                id="messages"
-                maxRows={10}
-                {...methods.register("messages")}
-                className="bg-white/10 border-none w-full text-white placeholder-white/60 min-h-[120px] p-2 rounded-xl"
-                placeholder="วางข้อความรีวิวที่ต้องการวิเคราะห์"
-              />
-              {methods.formState.errors.messages && (
-                <p className="text-red-500 text-sm">
-                  {methods.formState.errors.messages.message}
-                </p>
-              )}
-            </div>
-            <div className="flex items-start mt-2 text-sm text-white/80">
-              <Info className="w-4 h-4 mr-2 flex-shrink-0 mt-0.5" />
-              <p>
-                หากต้องการใส่หลายความคิดเห็น ให้กด Enter
-                เพื่อขึ้นบรรทัดใหม่สำหรับแต่ละความคิดเห็น
-              </p>
-            </div>
-            <div className="flex justify-end">
-              <Button
-                type="submit"
-                disabled={isLoading || methods.formState.isSubmitting}
-                size="lg"
-                className="rounded-full bg-gradient-to-r from-pink-500 to-yellow-500 hover:from-pink-600 hover:to-yellow-600 text-white font-semibold px-8 py-6 text-lg transition-all duration-300 ease-in-out transform hover:scale-105"
-              >
-                เริ่มต้นวิเคราะห์ <ArrowRight className="w-5 h-5 ml-2" />
-              </Button>
-            </div>
-            {apiError && (
-              <p className="text-red-500 text-sm">Error: {apiError}</p>
-            )}
-          </form>
-        </div>
-      </motion.div>
-      {isLoading ? (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-white"></div>
-        </div>
-      ) : result ? (
-        <div className="col-span-2 py-8">
-          <ResultSection analysisData={result} />
-        </div>
-      ) : null}
+          </div>
+        )}
+      </div>
     </main>
   );
 }
