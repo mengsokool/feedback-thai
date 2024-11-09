@@ -96,7 +96,7 @@ export default function Home() {
         transition={{ duration: 0.5, delay: 0.2 }}
       >
         <div className="bg-white/20 p-8 rounded-3xl shadow-2xl space-y-6">
-          <form onSubmit={methods.handleSubmit(onSubmit)}>
+          <form onSubmit={methods.handleSubmit(onSubmit)} className="space-y-8">
             <div>
               <Label
                 htmlFor="productName"
@@ -107,7 +107,7 @@ export default function Home() {
               <Input
                 id="productName"
                 {...methods.register("productName")}
-                className="bg-white/10 h-11 text-xl border-none text-white placeholder-white/60"
+                className="bg-white/10 h-11 text-xl border-none text-white"
                 placeholder="กรอกชื่อสินค้าของคุณ"
               />
               {methods.formState.errors.productName && (
