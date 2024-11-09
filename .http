@@ -55,3 +55,6 @@ Content-Type: application/json
     "รสชาติโดยรวมโอเค เผ็ดนิดหน่อย ข้าวนุ่ม ไข่ดาวเยิ้มๆ ถูกใจ!"
   ]
 }
+
+###
+POST https://api.aiforthai.in.th/ssense?text=สาขานี้พนักงานน่ารักให้บริการ

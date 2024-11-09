@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { sSense } from "./s-sense";
+import { sSense } from "@/lib/s-sense";
 import { analyzeReviews } from "@/lib/feedback";
 
 const requestSchema = z.object({

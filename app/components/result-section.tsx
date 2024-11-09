@@ -1,16 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import Markdown from 'react-markdown'
+import Markdown from "react-markdown";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  ThumbsUp,
-  ThumbsDown,
-  Star,
-  BarChart2,
-} from "lucide-react";
+import { ThumbsUp, ThumbsDown, Star, BarChart2, Bot } from "lucide-react";
+import NegativeAnalysis from "./negative-analysis";
+import { Button } from "@/components/ui/button";
+import { FrequencyWordChart } from "./frequency-word-chart";
 
 interface SimplifiedReview {
   text: string;
@@ -25,32 +23,44 @@ interface KeywordFrequency {
   [keyword: string]: number;
 }
 
-interface statistics {
+interface Statistics {
   totalReviews: number;
   positiveReviews: number;
   negativeReviews: number;
   averageScore: number;
   keywordFrequency: KeywordFrequency;
+  positiveKeywordFrequency: KeywordFrequency;
+  negativeKeywordFrequency: KeywordFrequency;
 }
 
 interface AnalysisData {
   simplified: SimplifiedReview[];
-  statistics?: statistics;
+  statistics?: Statistics;
   analysis: string;
 }
 
 export default function ResultSection({
   analysisData,
+  productName,
 }: {
   analysisData: AnalysisData;
+  productName: string;
 }) {
   const [activeTab, setActiveTab] = useState("overview");
+  const [isNagativeAnalysisDialogWorking, setIsNagativeAnalysisDialogWorking] =
+    useState(false);
 
   return (
     <div className="container mx-auto p-4 space-y-8">
-      <h1 className="text-3xl font-bold my-8">
-        ผลการวิเคราะห์รีวิว
-      </h1>
+      <h1 className="text-3xl font-bold my-8">ผลการวิเคราะห์รีวิว</h1>
+      {analysisData.statistics && (
+        <NegativeAnalysis
+          productName={productName}
+          stats={analysisData.statistics.negativeKeywordFrequency}
+          isNegativeAnalysisWorking={isNagativeAnalysisDialogWorking}
+          setIsNegativeAnalysisWorking={setIsNagativeAnalysisDialogWorking}
+        />
+      )}
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
@@ -115,7 +125,7 @@ export default function ResultSection({
               <CardTitle>การวิเคราะห์</CardTitle>
             </CardHeader>
             <CardContent>
-              <Markdown>{analysisData.analysis}</Markdown>
+              <Markdown className={"prose max-w-full"}>{analysisData.analysis}</Markdown>
             </CardContent>
           </Card>
         </TabsContent>
@@ -149,26 +159,50 @@ export default function ResultSection({
         <TabsContent value="keywords" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>คำสำคัญที่พบบ่อย</CardTitle>
+              <CardTitle>ภาพรวม</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                {analysisData.statistics &&
-                  Object.entries(analysisData.statistics.keywordFrequency)
-                    .sort(([, a], [, b]) => b - a)
-                    .slice(0, 20)
-                    .map(([keyword, frequency]) => (
-                      <div
-                        key={keyword}
-                        className="flex items-center justify-between"
-                      >
-                        <span>{keyword}</span>
-                        <span className="text-sm text-muted-foreground">
-                          {frequency}
-                        </span>
-                      </div>
-                    ))}
-              </div>
+              {analysisData.statistics?.keywordFrequency && (
+                <FrequencyWordChart
+                  keywordData={analysisData.statistics?.keywordFrequency}
+                />
+              )}
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle>คำสำคัญเชิงบวกที่พบบ่อย</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {analysisData.statistics?.positiveKeywordFrequency && (
+                <FrequencyWordChart
+                  keywordData={
+                    analysisData.statistics?.positiveKeywordFrequency
+                  }
+                />
+              )}
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex justify-between">
+                <p>คำสำคัญเชิงลบที่พบบ่อย</p>
+                <Button
+                  onClick={() => setIsNagativeAnalysisDialogWorking(true)}
+                >
+                  <Bot className="size-4 me-2" />
+                  วิเคราะห์
+                </Button>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {analysisData.statistics?.negativeKeywordFrequency && (
+                <FrequencyWordChart
+                  keywordData={
+                    analysisData.statistics?.negativeKeywordFrequency
+                  }
+                />
+              )}
             </CardContent>
           </Card>
         </TabsContent>
