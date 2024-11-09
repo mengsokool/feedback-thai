@@ -138,6 +138,8 @@ export async function analyzeReviews(sSenseResult: SSenseItem[], productName: st
 async function analyzeThroughLLM(prompt: string) {
   const apiUrl = `${LLM_URL}/ask`  // URL ของ FastAPI ที่เราใช้งาน
 
+  console.log(apiUrl)
+
   const response = await fetch(apiUrl, {
       method: 'POST',  // กำหนดเป็น POST request
       headers: {
